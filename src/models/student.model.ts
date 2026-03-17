@@ -56,15 +56,15 @@ export interface IStudent extends Document {
   };
 
   documents: {
-    photo?: IFile;
-    signature?: IFile;
+    photo: IFile;
+    signature: IFile;
     admissionFormFront?: IFile;
     admissionFormBack?: IFile;
   };
 
   healthDetails: {
     physicallyDisabled: boolean;
-    bloodGroup?: string;
+    bloodGroup: string;
   };
 
   createdAt: Date;
