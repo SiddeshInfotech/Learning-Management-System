@@ -90,9 +90,9 @@ const studentSchema = new Schema(
 
     basicDetails: {
       title: String,
-      firstName: { type: String, required: true },
+      firstName: { type: String },
       middleName: String,
-      lastName: { type: String, required: true },
+      lastName: { type: String },
       fullName: String,
       dateOfBirth: Date,
       age: Number,
@@ -118,10 +118,10 @@ const studentSchema = new Schema(
     },
 
     contactDetails: {
-      mobileNumber: { type: String, required: true },
+      mobileNumber: { type: String },
       whatsappNumber: String,
       parentNumber: String,
-      email: { type: String, required: true, unique: true }
+      email: { type: String, unique: true, sparse: true }
     },
 
     educationDetails: {
@@ -140,6 +140,21 @@ const studentSchema = new Schema(
     healthDetails: {
       physicallyDisabled: { type: Boolean, default: false },
       bloodGroup: String
+    },
+
+    status: {
+      type: String,
+      enum: ["IN_PROGRESS", "COMPLETED", "CONFIRMED"],
+      default: "IN_PROGRESS"
+    },
+
+    paymentDetails: {
+      amount: Number,
+      status: {
+        type: String,
+        enum: ["PENDING", "PAID"],
+        default: "PENDING"
+      }
     }
   },
   { timestamps: true }
