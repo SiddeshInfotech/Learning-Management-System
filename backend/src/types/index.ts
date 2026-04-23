@@ -24,38 +24,60 @@ export interface Video {
   moduleId: string;
   title: string;
   youtubeUrl: string;
+  duration?: number;
+  thumbnail?: string;
+  description?: string;
+  order?: number;
 }
 
 export interface Registration {
   _id?: any;
-  studentId: string;
+  studentId?: string;
   courseIds: string[];
-  basicDetails: {
+  basicDetails?: {
     firstName: string;
     lastName: string;
     dob: string;
     gender: string;
+    email?: string;
   };
-  address: {
+  address?: {
     street: string;
     city: string;
     state: string;
     pincode: string;
   };
-  contact: {
+  contact?: {
     phone: string;
     emergencyContact: string;
+    emergencyName?: string;
+    relationship?: string;
   };
-  education: {
+  education?: {
     qualification: string;
     institution: string;
     year: string;
+    percentage?: string;
   };
-  health: {
+  health?: {
     conditions: string;
     medications: string;
+    allergies?: string;
   };
-  status: "pending" | "approved" | "rejected";
+  payment?: {
+    amount?: number;
+    status?: string;
+    reference?: string;
+    notes?: string;
+  };
+  status: "draft" | "pending" | "approved" | "rejected";
+  currentStep?: number;
+  createdAt?: Date;
+  updatedAt?: Date;
+  expiresAt?: Date;
+  previouslyRejected?: boolean;
+  rejectedAt?: Date;
+  approvedAt?: Date;
 }
 
 export interface Document {
@@ -78,5 +100,27 @@ export interface Progress {
   studentId: string;
   courseId: string;
   videoId: string;
+  videoDuration?: number;
+  watchTime?: number;
   isCompleted: boolean;
+  completionPercentage?: number;
+  startedAt?: Date;
+  lastWatchedAt?: Date;
+  completedAt?: Date;
+  lastPlayheadPosition?: number;
+}
+
+export interface CourseProgress {
+  _id?: any;
+  studentId: string;
+  courseId: string;
+  totalVideos?: number;
+  completedVideos?: number;
+  totalWatchTime?: number;
+  requiredWatchTime?: number;
+  overallProgress?: number;
+  status?: "in_progress" | "completed" | "dropped";
+  enrolledAt?: Date;
+  completedAt?: Date;
+  lastAccessedAt?: Date;
 }

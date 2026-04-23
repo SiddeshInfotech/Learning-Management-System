@@ -87,7 +87,7 @@ export const registrationService = {
   saveStep: (data: any) => api.post("/registration/step", data),
   updateStudent: (id: string, studentId: string) =>
     api.put(`/registration/${id}/student`, { studentId }),
-  updatePayment: (id: string, payment: { amount: number; status: string; reference?: string }) =>
+  updatePayment: (id: string, payment: { amount: number; status: string; reference?: string; notes?: string }) =>
     api.put(`/registration/${id}/payment`, { payment }),
   updateStatus: (id: string, action: "approve" | "reject") =>
     api.post(`/registration/${id}/status`, { action }),
@@ -111,6 +111,9 @@ export const paymentService = {
 
 export const progressService = {
   getByCourse: (courseId: string) => api.get(`/progress/${courseId}`),
+  getCourseProgress: (courseId: string) => api.get(`/progress/course/${courseId}`),
+  watchVideo: (data: { courseId: string; videoId: string; watchedTime: number; totalDuration: number }) =>
+    api.post("/progress/video/watch", data),
   complete: (data: { courseId: string; videoId: string }) =>
     api.post("/progress/complete", data),
   getAll: (studentId?: string) =>
@@ -128,17 +131,38 @@ const getAuthHeader = () => {
 export const documentService = {
   getByStudent: (studentId: string) => api.get(`/documents?studentId=${studentId}`),
   getByRegistration: (registrationId: string) => api.get(`/documents?registrationId=${registrationId}`),
-  upload: (formData: FormData) => {
+  upload: (formData: FormData, timeoutMs: number = 120000) => {
     const headers: Record<string, string> = {};
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
     if (token) {
       headers.Authorization = `Bearer ${token}`;
     }
+    
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    
     return fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001/api"}/documents`, {
       method: "POST",
       headers,
       body: formData,
-    }).then((res) => res.json());
+      signal: controller.signal,
+    }).then((res) => {
+      clearTimeout(timeoutId);
+      if (!res.ok) {
+        return res.json().then((err) => {
+          throw new Error(err.message || `Upload failed with status ${res.status}`);
+        }).catch(() => {
+          throw new Error(`Upload failed with status ${res.status}`);
+        });
+      }
+      return res.json();
+    }).catch((err) => {
+      clearTimeout(timeoutId);
+      if (err.name === 'AbortError') {
+        throw new Error('Upload timed out. Please try again.');
+      }
+      throw err;
+    });
   },
   delete: (id: string) => api.delete(`/documents/${id}`),
 };

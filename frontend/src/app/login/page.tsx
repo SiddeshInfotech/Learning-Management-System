@@ -3,48 +3,52 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/components/ui/Toast";
 import styles from "./login.module.css";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   
-  const { login } = useAuth();
+  const { login: authLogin } = useAuth();
   const router = useRouter();
+  const { success, error: showError } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
-    setIsLoading(true);
+    setLoading(true);
 
     try {
-      await login(email, password);
+      await authLogin(email, password);
+      success("Login successful!");
+      
       const storedUser = localStorage.getItem("user");
       if (storedUser) {
         const user = JSON.parse(storedUser);
-        if (user.role === "admin") {
+        if (user?.role === "admin") {
           router.push("/admin/dashboard");
         } else {
           router.push("/student/dashboard");
         }
       }
     } catch (err: any) {
-      setError(err.response?.data?.message || "Login failed. Please try again.");
-      setIsLoading(false);
+      showError(err?.response?.data?.message || "Login failed. Please check your credentials.");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
-        <h1 className={styles.title}>LMS Platform</h1>
-        <p className={styles.subtitle}>Sign in to continue</p>
+        <div className={styles.header}>
+          <span className={styles.icon}>🎓</span>
+          <h1 className={styles.title}>LMS Platform</h1>
+          <p className={styles.subtitle}>Enter your credentials to access your account</p>
+        </div>
 
         <form onSubmit={handleSubmit} className={styles.form}>
-          {error && <div className={styles.error}>{error}</div>}
-          
           <div className={styles.field}>
             <label htmlFor="email">Email</label>
             <input
@@ -54,7 +58,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Enter your email"
               required
-              disabled={isLoading}
+              disabled={loading}
             />
           </div>
 
@@ -67,12 +71,19 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Enter your password"
               required
-              disabled={isLoading}
+              disabled={loading}
             />
           </div>
 
-          <button type="submit" className={styles.button} disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign In"}
+          <button type="submit" className={styles.button} disabled={loading}>
+            {loading ? (
+              <>
+                <span className={styles.spinner}></span>
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
           </button>
         </form>
       </div>

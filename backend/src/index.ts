@@ -3,7 +3,9 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import multipart from "@fastify/multipart";
+import rateLimit from "@fastify/rate-limit";
 import { connectDB } from "./db/index.js";
+import { setupErrorHandler } from "./utils/errorHandler.js";
 import { authRoutes } from "./routes/auth.js";
 import { userRoutes } from "./routes/users.js";
 import { courseRoutes } from "./routes/courses.js";
@@ -13,6 +15,7 @@ import { registrationRoutes } from "./routes/registration.js";
 import { documentRoutes } from "./routes/documents.js";
 import { paymentRoutes } from "./routes/payments.js";
 import { progressRoutes } from "./routes/progress.js";
+import { rateLimitConfig, rateLimitMessages } from "./config/rateLimit.js";
 import path from "path";
 import fs from "fs";
 
@@ -34,7 +37,20 @@ async function buildServer() {
     limits: {
       fileSize: 10 * 1024 * 1024,
     },
+    throwFileSizeLimit: false,
   });
+
+  await fastify.register(rateLimit, {
+    max: rateLimitConfig.global.max,
+    timeWindow: rateLimitConfig.global.timeWindow,
+    errorResponseBuilder: () => ({
+      statusCode: 429,
+      error: "Too Many Requests",
+      message: rateLimitMessages.global,
+    }),
+  });
+
+  setupErrorHandler(fastify);
 
   const uploadsDir = path.join(process.cwd(), "uploads");
   if (!fs.existsSync(uploadsDir)) {
@@ -61,7 +77,7 @@ async function buildServer() {
 
   fastify.decorate("requireAdmin", async function (request: any, reply: any) {
     if (request.user.role !== "admin") {
-      reply.status(403).send({ message: "Admin access required" });
+      return reply.status(403).send({ message: "Admin access required" });
     }
   });
 
