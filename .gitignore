@@ -42,3 +42,12 @@ coverage
 
 # Misc
 *.pem
+
+# macOS
+.DS_Store
+
+# JSON files (if you really want all ignored)
+*.json
+
+# Design file
+design.md
